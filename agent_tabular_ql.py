@@ -60,11 +60,26 @@ def tabular_q_learning(q_func, current_state_1, current_state_2, action_index,
     Returns:
         None
     """
-    # TODO Your code here
-    q_func[current_state_1, current_state_2, action_index,
-           object_index] = 0  # TODO Your update here
+    # Get the max Q-value for the next state
+    if terminal:
+        max_q_next_state = 0.0
+    else:
+        q_values_next_state = q_func[next_state_1, next_state_2, :, :]
+        max_q_next_state = np.max(q_values_next_state)
 
-    return None  # This function shouldn't return anything
+    # Calculate the target Q-value
+    target_q_value = reward + GAMMA * max_q_next_state
+
+    # Get the old Q-value
+    old_q_value = q_func[current_state_1, current_state_2, action_index, object_index]
+
+    # Apply the Q-learning update rule
+    new_q_value = (1 - ALPHA) * old_q_value + ALPHA * target_q_value
+
+    # Update the Q-table in-place
+    q_func[current_state_1, current_state_2, action_index, object_index] = new_q_value
+
+    return None
 
 
 # pragma: coderesponse end
