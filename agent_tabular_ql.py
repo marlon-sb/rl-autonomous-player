@@ -107,31 +107,52 @@ def run_episode(for_training):
     """
     epsilon = TRAINING_EP if for_training else TESTING_EP
 
-    epi_reward = None
-    # initialize for each episode
-    # TODO Your code here
+    # Initialize reward tracking for testing mode
+    cumulative_reward = 0.0
+    discount_factor = 1.0  # Tracks γ^t, starting at t=0
 
     (current_room_desc, current_quest_desc, terminal) = framework.newGame()
 
     while not terminal:
-        # Choose next action and execute
-        # TODO Your code here
+        # 1. Get current state indices from text descriptions
+        state_room_idx = dict_room_desc[current_room_desc]
+        state_quest_idx = dict_quest_desc[current_quest_desc]
 
+        # 2. Choose action via epsilon-greedy
+        (action_index, object_index) = epsilon_greedy(state_room_idx,
+                                                      state_quest_idx,
+                                                      q_func, epsilon)
+
+        # 3. Take action in the environment
+        (next_room_desc, next_quest_desc, reward,
+         terminal) = framework.step_game(current_room_desc, current_quest_desc,
+                                         action_index, object_index)
+
+        # 4. Update Q-function if training
         if for_training:
-            # update Q-function.
-            # TODO Your code here
-            pass
+            next_state_room_idx = dict_room_desc[next_room_desc]
+            next_state_quest_idx = dict_quest_desc[next_quest_desc]
 
-        if not for_training:
-            # update reward
-            # TODO Your code here
-            pass
+            tabular_q_learning(q_func, state_room_idx, state_quest_idx,
+                               action_index, object_index, reward,
+                               next_state_room_idx, next_state_quest_idx,
+                               terminal)
 
-        # prepare next step
-        # TODO Your code here
+        # 5. Accumulate reward if testing
+        else:
+            # Add the discounted reward for this step
+            cumulative_reward += discount_factor * reward
+            # Apply discount for the *next* step's reward
+            discount_factor *= GAMMA
+
+        # 6. Transition to the next state
+        current_room_desc = next_room_desc
+        current_quest_desc = next_quest_desc
 
     if not for_training:
-        return epi_reward
+        return cumulative_reward
+
+    return None
 
 
 # pragma: coderesponse end
