@@ -11,11 +11,11 @@ DEBUG = False
 GAMMA = 0.5  # discounted factor
 TRAINING_EP = 0.5  # epsilon-greedy parameter for training
 TESTING_EP = 0.05  # epsilon-greedy parameter for testing
-NUM_RUNS = 10
+NUM_RUNS = 5
 NUM_EPOCHS = 600
 NUM_EPIS_TRAIN = 25  # number of episodes for training at each epoch
 NUM_EPIS_TEST = 50  # number of episodes for testing
-ALPHA = 0.001  # learning rate for training
+ALPHA = 0.01  # learning rate for training
 
 ACTIONS = framework.get_actions()
 OBJECTS = framework.get_objects()
@@ -110,34 +110,49 @@ def run_episode(for_training):
         None
     """
     epsilon = TRAINING_EP if for_training else TESTING_EP
-    epi_reward = None
 
     # initialize for each episode
-    # TODO Your code here
+    epi_reward = 0.0
+    discount_factor = 1.0  # This is gamma^t, starting at t=0
 
     (current_room_desc, current_quest_desc, terminal) = framework.newGame()
+
     while not terminal:
         # Choose next action and execute
-        current_state = current_room_desc + current_quest_desc
+        current_state_text = current_room_desc + " " + current_quest_desc
         current_state_vector = utils.extract_bow_feature_vector(
-            current_state, dictionary)
-        # TODO Your code here
+            current_state_text, dictionary)
+
+        (action_index, object_index) = epsilon_greedy(current_state_vector,
+                                                      theta, epsilon)
+
+        (next_room_desc, next_quest_desc, reward,
+         terminal) = framework.step_game(current_room_desc, current_quest_desc,
+                                         action_index, object_index)
 
         if for_training:
-            # update Q-function.
-            # TODO Your code here
-            pass
+            # update Q-function (theta).
+            next_state_text = next_room_desc + " " + next_quest_desc
+            next_state_vector = utils.extract_bow_feature_vector(
+                next_state_text, dictionary)
+
+            linear_q_learning(theta, current_state_vector,
+                              action_index, object_index, reward,
+                              next_state_vector, terminal)
 
         if not for_training:
             # update reward
-            # TODO Your code here
-            pass
+            epi_reward += discount_factor * reward
+            discount_factor *= GAMMA
 
         # prepare next step
-        # TODO Your code here
+        current_room_desc = next_room_desc
+        current_quest_desc = next_quest_desc
 
     if not for_training:
         return epi_reward
+
+    return None
 
 
 def run_epoch():
@@ -193,4 +208,5 @@ if __name__ == '__main__':
     axis.set_ylabel('reward')
     axis.set_title(('Linear: nRuns=%d, Epilon=%.2f, Epi=%d, alpha=%.4f' %
                     (NUM_RUNS, TRAINING_EP, NUM_EPIS_TRAIN, ALPHA)))
+    plt.show()
 
