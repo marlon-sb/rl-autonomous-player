@@ -77,8 +77,24 @@ def linear_q_learning(theta, current_state_vector, action_index, object_index,
     Returns:
         None
     """
-    # TODO Your code here
-    theta = None # TODO Your update here
+    # 1. Get max Q-value for next state
+    q_values_next_state = theta @ next_state_vector
+    max_q_next_state = np.max(q_values_next_state)
+
+    # 2. Calculate TD Target
+    target_q_value = reward + GAMMA * max_q_next_state * (1 - terminal)
+
+    # 3. Get current Q-value prediction
+    flat_action_index = tuple2index(action_index, object_index)
+    current_q_value = (theta @ current_state_vector)[flat_action_index]
+
+    # 4. Calculate TD Error
+    td_error = target_q_value - current_q_value
+
+    # 5. Apply SGD update to the specific row of theta
+    theta[flat_action_index] += ALPHA * td_error * current_state_vector
+
+    return None
 # pragma: coderesponse end
 
 
