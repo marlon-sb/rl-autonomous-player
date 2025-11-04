@@ -45,8 +45,17 @@ def epsilon_greedy(state_vector, theta, epsilon):
     Returns:
         (int, int): the indices describing the action/object to take
     """
-    # TODO Your code here
-    action_index, object_index = None, None
+    # Explore
+    if np.random.random() < epsilon:
+        action_index = np.random.randint(NUM_ACTIONS)
+        object_index = np.random.randint(NUM_OBJECTS)
+
+    # Exploit
+    else:
+        q_values = theta @ state_vector
+        best_flat_index = np.argmax(q_values)
+        action_index, object_index = index2tuple(best_flat_index)
+
     return (action_index, object_index)
 # pragma: coderesponse end
 
