@@ -88,19 +88,27 @@ def deep_q_learning(current_state_vector, action_index, object_index, reward,
     """
     with torch.no_grad():
         q_values_action_next, q_values_object_next = model(next_state_vector)
-    maxq_next = 1 / 2 * (q_values_action_next.max()
-                         + q_values_object_next.max())
 
-    q_value_cur_state = model(current_state_vector)
+    maxq_next = 0.5 * (q_values_action_next.max() + q_values_object_next.max())
 
-    # TODO Your code here
+    target_q_value = reward + GAMMA * maxq_next * (1 - terminal)
 
-    loss = None
+    q_values_action, q_values_object = model(current_state_vector)
+
+    q_value_action = q_values_action[action_index]
+    q_value_object = q_values_object[object_index]
+
+    current_q_value = 0.5 * (q_value_action + q_value_object)
+
+    loss = F.mse_loss(current_q_value, target_q_value)
 
     optimizer.zero_grad()
     loss.backward()
     optimizer.step()
+
+
 # pragma: coderesponse end
+
 
 
 def run_episode(for_training):
