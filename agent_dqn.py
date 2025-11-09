@@ -40,8 +40,18 @@ def epsilon_greedy(state_vector, epsilon):
     Returns:
         (int, int): the indices describing the action/object to take
     """
-    # TODO Your code here
-    action_index, object_index = None, None
+    # Explore
+    if np.random.random() < epsilon:
+        action_index = np.random.randint(NUM_ACTIONS)
+        object_index = np.random.randint(NUM_OBJECTS)
+
+    # Exploit
+    else:
+        with torch.no_grad():
+            q_values_action, q_values_object = model(state_vector)
+            action_index = q_values_action.argmax().item()
+            object_index = q_values_object.argmax().item()
+
     return (action_index, object_index)
 
 class DQN(nn.Module):
